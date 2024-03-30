@@ -361,7 +361,7 @@ class MUSIC_PLAYER:
 
         self.update_info_related_to_song() # update the songs added info in application
 
-    def remove_song_folder(self,e:Event):
+    def remove_song_folder(self,e:Event=None):
         ## 'icacls file(or)folder /remove adminname' # for removing permisions
         command = f'icacls {self.main_path} /remove {self.admin_name}'
         subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
@@ -746,7 +746,7 @@ class MUSIC_PLAYER:
     
 
     def reset_all(self):
-        ## 'icacls file(or)folder /remove adminname' # fro removing permissions
+        ## 'icacls file(or)folder /remove adminname' # for removing permissions
         try:
             command = f'icacls {self.main_path} /remove {self.admin_name}'
             subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
@@ -1982,8 +1982,10 @@ class MUSIC_PLAYER:
                                         flag = 2
                                 except:
                                     pass
-
-        
+                
+                audio = self.recursive("Ye Mera Jahan.mp3") # default song
+                self.songs_list.append(audio)
+                            
                 current_song = self.config.get(section="DATA",option="current_song")
                 volume_value = int(self.config.get(section='DATA',option='volume'))
 
@@ -1998,10 +2000,6 @@ class MUSIC_PLAYER:
 
                     self.volume_frame.configure(text=f'Volume {int(volume_value)}%')
 
-                    audio = MP3(self.recursive("Ye Mera Jahan.mp3"))
-                    self.songs_list.insert(0,self.recursive("Ye Mera Jahan.mp3"))
-                    self.update_info_related_to_song()
-
 
                 elif flag == 2:# if song gets deleted after playing but the folder exists and the folder have atleast one song
 
@@ -2014,9 +2012,6 @@ class MUSIC_PLAYER:
 
                     self.volume_frame.configure(text=f'Volume {int(volume_value)}%')
 
-                    audio = MP3(self.recursive("Ye Mera Jahan.mp3")) 
-                    self.songs_list.insert(0,self.recursive("Ye Mera Jahan.mp3"))
-                    self.update_info_related_to_song()
                 
                 if volume_value>=80 and self.is_volume_limited == True:
                     # Automatically set the volume to 70% if it is >=80
@@ -2102,15 +2097,17 @@ class MUSIC_PLAYER:
                         
                     self.root.iconbitmap(os.path.join(icons_path,"icon.ico"))
 
-                    audio = MP3(self.recursive("Ye Mera Jahan.mp3")) #opening the file path
-                    if audio: # if True means any data in audio only it satisfies the if condition
-                        # Check if the audio has a valid duration
-                        self.songs_list.append(self.recursive("Ye Mera Jahan.mp3"))
-                        self.update_info_related_to_song()
+                    audio = self.recursive("Ye Mera Jahan.mp3") # default song
+                    self.songs_list.append(audio)
+                    self.current_song = None
+                    self.update_info_related_to_song()
+
                     # set permisions to denied
                     # icacls file(or)folder name /deny adminname:F # for blocking permissions
                     command = f'icacls {self.main_path} /deny {self.admin_name}:F'
                     subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+
+                    self.__del__()
                 
                 else:
                     raise requests.ConnectionError.add_note(self,"Please Connect To Internet")
@@ -2124,6 +2121,7 @@ class MUSIC_PLAYER:
 
         except Exception as e:
             # incase of any error from the coumpter click on reset all button on settings
+            print(e)
             Label(self.main_frame,text="Some Error While Downloading\n Check Internet\n",
                   font=("TimesNewRoman",45),width=30,fg='red',bg="#000000",anchor='center').place(x=0,y=100)
             Label(self.main_frame,text="Click on\nSettings -> Reset all\n",
