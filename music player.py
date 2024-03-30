@@ -21,7 +21,7 @@ import time
 from winotify import Notification,audio
 import winsound
 import webbrowser
-from pathlib import Path
+from builtins import open
 
 class MUSIC_PLAYER:
 
@@ -81,6 +81,7 @@ class MUSIC_PLAYER:
 
         self.config.set(section="DATA",option='last_pos',value=totol_mill_secs)
         # changing the last pos value in catch file
+
         with open(os.path.join(self.main_path,'user data.ini'),'w',encoding='utf-8') as fo:
             self.config.write(fo)
         
@@ -1529,6 +1530,19 @@ class MUSIC_PLAYER:
 
         time = self.song_s.get() # getting the slider postion in millseconds
 
+        command = f'icacls {self.main_path} /remove {self.admin_name}'
+        subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+
+        self.config.set(section="DATA",option='last_pos',value=str(int(time)))
+        # changing the last pos value in catch file
+
+        with open(os.path.join(self.main_path,'user data.ini'),'w',encoding='utf-8') as fo:
+            self.config.write(fo)
+        
+        ## 'icacls file(or)folder /deny adminname:F'  # for blocking the permissions
+        command = f'icacls {self.main_path} /deny {self.admin_name}:F'
+        subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+
         """The slider length is length of the song Every time the song get's changed the slider length changes"""
         h,ts = divmod(time,3600000) # divides the postion of slider by 3600000 to get hours and minutes
         m,ts = divmod(ts,60000) # divided the postion of slider by 60000 to get mimutes,seconds
@@ -2009,7 +2023,8 @@ class MUSIC_PLAYER:
                     self.volume_frame.configure(text=f'Volume {int(volume_value)}%')
 
                 
-                if volume_value>=80 and self.is_volume_limited == True:
+                if volume_value>=80:
+                    self.is_volume_limited == True
                     # Automatically set the volume to 70% if it is >=80
                     self.volume_s.set(70)
                     self.volume_frame.configure(text='Volume 70%')
