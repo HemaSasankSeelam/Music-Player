@@ -1985,6 +1985,7 @@ class MUSIC_PLAYER:
                 
                 audio = self.recursive("Ye Mera Jahan.mp3") # default song
                 self.songs_list.append(audio)
+                self.update_info_related_to_song()
                             
                 current_song = self.config.get(section="DATA",option="current_song")
                 volume_value = int(self.config.get(section='DATA',option='volume'))
