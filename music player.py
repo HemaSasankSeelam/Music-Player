@@ -3,7 +3,7 @@ from pynput import keyboard
 import threading
 import customtkinter
 from tkinter import filedialog
-import os
+import os,sys
 import random
 import pygame
 from configparser import ConfigParser
@@ -309,55 +309,57 @@ class MUSIC_PLAYER:
                                 if audio: # if True means any data in audio only it satisfies the if condition
                                     # Check if the audio has a valid duration
                                     self.songs_list.append(os.path.join(root,filename)) 
-                                    song_flag = True # changing flag to True for agging song folder to catch files
+                                    song_flag = True # changing flag to True for adding song folder to catch files
+                                    self.double_check(song_flag=song_flag,root=root)
                             except:
                                 pass
-                    ### Double check if the user adds the same files it doesn't add
-                    songs_list2 = self.songs_list.copy()
-                    self.songs_list.clear()
-                    for i in songs_list2:
-                        flag = 0
-                        max_count = len(self.songs_list)
-                        for j in self.songs_list:
-                            if os.path.normpath(i) != os.path.normpath(j):
-                                # comparing the path in both lists
-                                # if flag == max len of songs list the only the song adds into list
-                                flag+=1
-                        if flag == max_count:
-                            self.songs_list.append(i) # addes to song_list 
+    def double_check(self,song_flag,root):
+        ### Double check if the user adds the same files it doesn't add
+        songs_list2 = self.songs_list.copy()
+        self.songs_list.clear()
+        for i in songs_list2:
+            flag = 0
+            max_count = len(self.songs_list)
+            for j in self.songs_list:
+                if os.path.normpath(i) != os.path.normpath(j):
+                    # comparing the path in both lists
+                    # if flag == max len of songs list the only the song adds into list
+                    flag+=1
+            if flag == max_count:
+                self.songs_list.append(i) # addes to song_list 
 
-                    if song_flag == True:
-                        # 'icacls file(or)folder /remove adminname' # for removing the permisions
-                        command = f'icacls {self.main_path} /remove {self.admin_name}'
-                        subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
-                        self.config.read(os.path.join(self.main_path,"user data.ini"),encoding='utf-8') # reads the catch file data
-                        l = self.config.get(section="DATA",option="songs_path").split(",") # selects the section of data returns list format because we use split func
-                        l = l[0:len(l)-1] # removes the last ","
+        if song_flag == True:
+            # 'icacls file(or)folder /remove adminname' # for removing the permisions
+            command = f'icacls {self.main_path} /remove {self.admin_name}'
+            subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+            self.config.read(os.path.join(self.main_path,"user data.ini"),encoding='utf-8') # reads the catch file data
+            l = self.config.get(section="DATA",option="songs_path").split(",") # selects the section of data returns list format because we use split func
+            l = l[0:len(l)-1] # removes the last ","
 
-                        if l == []: # if l == [] means this is the first song to be entering into catch file
-                            self.config.set(section="DATA",option="songs_path",value=root+",") # settig to the catch file
-                            with open(os.path.join(self.main_path,"user data.ini"),'w',encoding='utf-8') as fo: # make sue thst encoding = 'utf-8' for to add paths to catch file
-                                self.config.write(fo) # writing to catch file
+            if l == []: # if l == [] means this is the first song to be entering into catch file
+                self.config.set(section="DATA",option="songs_path",value=root+",") # settig to the catch file
+                with open(os.path.join(self.main_path,"user data.ini"),'w',encoding='utf-8') as fo: # make sue thst encoding = 'utf-8' for to add paths to catch file
+                    self.config.write(fo) # writing to catch file
 
-                        elif l!=[]:
-                            flag = 0
-                            max_count = len(l)
-                            for i in l:
-                                if os.path.normpath(i) != os.path.normpath(root):
-                                    flag+=1
-                            
-                            if flag == max_count:
+            elif l!=[]:
+                flag = 0
+                max_count = len(l)
+                for i in l:
+                    if os.path.normpath(i) != os.path.normpath(root):
+                        flag+=1
+                
+                if flag == max_count:
 
-                                my_str = ",".join(l)# joins every path by ","
-                                my_str2 = my_str + "," + root + "," # the path ends with ',' that why we adding ',' for the last song
-                                self.config.set(section="DATA",option="songs_path",value=my_str2)
-                                with open(os.path.join(self.main_path,"user data.ini"),'w',encoding='utf-8') as fo:
-                                    self.config.write(fo)
-                                # 'icacls file(or)folder /deny adminname:F' # for blocking the permissions
-                                command = f'icacls {self.main_path} /deny {self.admin_name}:F'
-                                subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+                    my_str = ",".join(l)# joins every path by ","
+                    my_str2 = my_str + "," + root + "," # the path ends with ',' that why we adding ',' for the last song
+                    self.config.set(section="DATA",option="songs_path",value=my_str2)
+                    with open(os.path.join(self.main_path,"user data.ini"),'w',encoding='utf-8') as fo:
+                        self.config.write(fo)
+                    # 'icacls file(or)folder /deny adminname:F' # for blocking the permissions
+                    command = f'icacls {self.main_path} /deny {self.admin_name}:F'
+                    subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
 
-            self.update_info_related_to_song() # update the songs added info in application
+        self.update_info_related_to_song() # update the songs added info in application
 
     def remove_song_folder(self,e:Event):
         ## 'icacls file(or)folder /remove adminname' # for removing permisions
@@ -1930,12 +1932,18 @@ class MUSIC_PLAYER:
     
 
     """ ********************************* Checking user catch file from system *****************"""
-    
+    def recursive(self,path):
+        try:
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath('.')
+        return os.path.join(base_path, path)
 
     def checking_user_preferences(self):
         "C:/Users/adminname/AppData/Local"
         self.main_path = os.path.join(self.post_admin_path,'music_player')
 
+        
         try:
             if os.path.exists(self.main_path):
                 # 'icacls file(or)foldername /remove adminname'
@@ -1990,6 +1998,11 @@ class MUSIC_PLAYER:
 
                     self.volume_frame.configure(text=f'Volume {int(volume_value)}%')
 
+                    audio = MP3(self.recursive("Ye Mera Jahan.mp3"))
+                    self.songs_list.insert(0,self.recursive("Ye Mera Jahan.mp3"))
+                    self.update_info_related_to_song()
+
+
                 elif flag == 2:# if song gets deleted after playing but the folder exists and the folder have atleast one song
 
                     self.update_info_related_to_song()
@@ -2000,6 +2013,10 @@ class MUSIC_PLAYER:
                     pygame.mixer_music.set_volume(volume_value/100)
 
                     self.volume_frame.configure(text=f'Volume {int(volume_value)}%')
+
+                    audio = MP3(self.recursive("Ye Mera Jahan.mp3")) 
+                    self.songs_list.insert(0,self.recursive("Ye Mera Jahan.mp3"))
+                    self.update_info_related_to_song()
                 
                 if volume_value>=80 and self.is_volume_limited == True:
                     # Automatically set the volume to 70% if it is >=80
@@ -2084,6 +2101,12 @@ class MUSIC_PLAYER:
                         self.config.write(fo)
                         
                     self.root.iconbitmap(os.path.join(icons_path,"icon.ico"))
+
+                    audio = MP3(self.recursive("Ye Mera Jahan.mp3")) #opening the file path
+                    if audio: # if True means any data in audio only it satisfies the if condition
+                        # Check if the audio has a valid duration
+                        self.songs_list.append(self.recursive("Ye Mera Jahan.mp3"))
+                        self.update_info_related_to_song()
                     # set permisions to denied
                     # icacls file(or)folder name /deny adminname:F # for blocking permissions
                     command = f'icacls {self.main_path} /deny {self.admin_name}:F'
@@ -2099,7 +2122,7 @@ class MUSIC_PLAYER:
             else:
                 self.all_bindings() 
 
-        except:
+        except Exception as e:
             # incase of any error from the coumpter click on reset all button on settings
             Label(self.main_frame,text="Some Error While Downloading\n Check Internet\n",
                   font=("TimesNewRoman",45),width=30,fg='red',bg="#000000",anchor='center').place(x=0,y=100)
