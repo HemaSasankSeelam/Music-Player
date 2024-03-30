@@ -21,6 +21,7 @@ import time
 from winotify import Notification,audio
 import winsound
 import webbrowser
+from pathlib import Path
 
 class MUSIC_PLAYER:
 
@@ -1942,7 +1943,6 @@ class MUSIC_PLAYER:
     def checking_user_preferences(self):
         "C:/Users/adminname/AppData/Local"
         self.main_path = os.path.join(self.post_admin_path,'music_player')
-
         
         try:
             if os.path.exists(self.main_path):
@@ -1982,15 +1982,11 @@ class MUSIC_PLAYER:
                                         flag = 2
                                 except:
                                     pass
-                
-                audio = self.recursive("Ye Mera Jahan.mp3") # default song
-                self.songs_list.append(audio)
-                self.update_info_related_to_song()
                             
                 current_song = self.config.get(section="DATA",option="current_song")
                 volume_value = int(self.config.get(section='DATA',option='volume'))
 
-                if os.path.exists(current_song): # if only song exists in system 
+                if os.path.exists(current_song): # if only song exists in system
 
                     self.update_info_related_to_song(current_song)
 
@@ -2000,7 +1996,6 @@ class MUSIC_PLAYER:
                     pygame.mixer_music.set_volume(volume_value/100)
 
                     self.volume_frame.configure(text=f'Volume {int(volume_value)}%')
-
 
                 elif flag == 2:# if song gets deleted after playing but the folder exists and the folder have atleast one song
 
@@ -2100,8 +2095,13 @@ class MUSIC_PLAYER:
 
                     audio = self.recursive("Ye Mera Jahan.mp3") # default song
                     self.songs_list.append(audio)
+                    shutil.copy2(src=audio,dst=self.main_path)
                     self.current_song = None
-                    self.update_info_related_to_song()
+                    self.update_info_related_to_song()  
+
+                    self.config.set(section="DATA",option="songs_path",value=self.main_path+",") # settig to the catch file
+                    with open(os.path.join(self.main_path,"user data.ini"),'w',encoding='utf-8') as fo: # make sue thst encoding = 'utf-8' for to add paths to catch file
+                        self.config.write(fo) # writing to catch file
 
                     # set permisions to denied
                     # icacls file(or)folder name /deny adminname:F # for blocking permissions
