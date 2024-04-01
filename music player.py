@@ -2058,8 +2058,11 @@ class MUSIC_PLAYER:
                     self.update_song_background()
                 
                 last_pos = int(self.config.get(section="DATA",option='last_pos'))
+                pygame.mixer_music.set_volume(0)
                 self.set_slider(last_pos)
                 self.pause_function()
+                volume_value = int(self.config.get(section='DATA',option='volume'))
+                pygame.mixer_music.set_volume(volume_value/100)
 
                 self.font_name = self.config.get(section="DATA",option="font_name")
                 self.string_var2.set(value=self.font_name)
