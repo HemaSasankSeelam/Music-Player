@@ -72,22 +72,29 @@ class MUSIC_PLAYER:
     def __del__(self):
 
         ## 'icacls file(or)folder /remove adminname' # for removing permisions
-        command = f'icacls {self.main_path} /remove {self.admin_name}'
-        subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+        try:
+            command = f'icacls {self.main_path} /remove {self.admin_name}'
+            subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
 
-        time_text = str(self.left_time.cget('text'))
-        h,m,s = map(int,time_text.split(":"))
-        totol_mill_secs = str(h*36_00_000 + m*60_000 + s*1_000) # it takes only str
+            time_text = str(self.left_time.cget('text'))
+            h,m,s = map(int,time_text.split(":"))
+            totol_mill_secs = str(h*36_00_000 + m*60_000 + s*1_000) # it takes only str
 
-        self.config.set(section="DATA",option='last_pos',value=totol_mill_secs)
-        # changing the last pos value in catch file
+            self.config.set(section="DATA",option='last_pos',value=totol_mill_secs)
+            # changing the last pos value in catch file
 
-        with open(os.path.join(self.main_path,'user data.ini'),'w',encoding='utf-8') as fo:
-            self.config.write(fo)
+            with open(os.path.join(self.main_path,'user data.ini'),'w',encoding='utf-8') as fo:
+                self.config.write(fo)
+        except:
+            pass
+
         
         ## 'icacls file(or)folder /deny adminname:F'  # for blocking the permissions
-        command = f'icacls {self.main_path} /deny {self.admin_name}:F'
-        subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+        try:
+            command = f'icacls {self.main_path} /deny {self.admin_name}:F'
+            subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+        except:
+            pass
 
     
     def all_functions(self):
@@ -757,6 +764,8 @@ class MUSIC_PLAYER:
 
         if self.is_palying == True : # if the song is playing make to pause
             self.pause_function()
+        if self.current_song:
+            pygame.mixer_music.unload()
 
         if os.path.exists(self.main_path):
             shutil.rmtree(f'{self.main_path}') # removes the entire catch files data from system
