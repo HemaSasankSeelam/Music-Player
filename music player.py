@@ -1990,21 +1990,29 @@ class MUSIC_PLAYER:
                 for i in range(0,no):
                     if i not in [8,16,17,18,19,23,24,25,26,45,46,47]: # these are the not perfect images indexs removing those and adding remaing
                         self.gif_images_list.append(PhotoImage(file=os.path.join(icons_path,"gif image.gif"),format=f'gif -index {i}'))
+            
+                for i in songs_path_list: # if the song folder is deleted after then we need to delete the folder from list
+                    if not os.path.exists(i):
+                        songs_path_list.remove(i)
+                
+                my_str2 = ",".join(songs_path_list) # update the info in cathc file
+                self.config.set(section="DATA",option="songs_path",value=my_str2 + ",")
+                with open(os.path.join(self.main_path,"user data.ini"),'w',encoding='utf-8') as fo:
+                    self.config.write(fo)
 
                 flag = 0
                 for i in songs_path_list:
-                    if os.path.exists(i):
-                        flag = 1
-                        for j in os.listdir(i):
-                            if os.path.splitext(j)[-1].lower().strip() in (".mp3"):
-                                try:
-                                    audio = MP3(os.path.join(i,j))
-                                    """ if the file is not able to play raises error"""
-                                    if audio:
-                                        self.songs_list.append(os.path.join(i,j))   
-                                        flag = 2
-                                except:
-                                    pass
+                    flag = 1
+                    for j in os.listdir(i):
+                        if os.path.splitext(j)[-1].lower().strip() in (".mp3"):
+                            try:
+                                audio = MP3(os.path.join(i,j))
+                                """ if the file is not able to play raises error"""
+                                if audio:
+                                    self.songs_list.append(os.path.join(i,j))   
+                                    flag = 2
+                            except:
+                                pass
                             
                 current_song = self.config.get(section="DATA",option="current_song")
                 volume_value = int(self.config.get(section='DATA',option='volume'))
@@ -2013,9 +2021,11 @@ class MUSIC_PLAYER:
 
                     self.update_info_related_to_song(current_song)
 
+                    last_pos = int(self.config.get(section="DATA",option='last_pos'))
+                    pygame.mixer_music.set_volume(0)
+                    self.set_slider(last_pos)
+                    self.pause_function()
                     volume_value = int(self.config.get(section='DATA',option='volume'))
-                    self.volume_s.set(volume_value)
-
                     pygame.mixer_music.set_volume(volume_value/100)
 
                     self.volume_frame.configure(text=f'Volume {int(volume_value)}%')
@@ -2066,12 +2076,6 @@ class MUSIC_PLAYER:
                     self.is_static = False
                     self.update_song_background()
                 
-                last_pos = int(self.config.get(section="DATA",option='last_pos'))
-                pygame.mixer_music.set_volume(0)
-                self.set_slider(last_pos)
-                self.pause_function()
-                volume_value = int(self.config.get(section='DATA',option='volume'))
-                pygame.mixer_music.set_volume(volume_value/100)
 
                 self.font_name = self.config.get(section="DATA",option="font_name")
                 self.string_var2.set(value=self.font_name)
@@ -2126,7 +2130,7 @@ class MUSIC_PLAYER:
                     self.current_song = None
                     self.update_info_related_to_song()  
 
-                    self.config.set(section="DATA",option="songs_path",value=self.main_path+",") # settig to the catch file
+                    self.config.set(section="DATA",option="songs_path",value=self.main_path+",") # setting to the catch file
                     with open(os.path.join(self.main_path,"user data.ini"),'w',encoding='utf-8') as fo: # make sue thst encoding = 'utf-8' for to add paths to catch file
                         self.config.write(fo) # writing to catch file
 
@@ -2287,7 +2291,6 @@ class MUSIC_PLAYER:
 
 
             """
-
         output_folder = os.path.join(self.pre_admin_path,"Downloads")
         with open(os.path.join(output_folder,"Help file.txt"),'w') as fo:
             fo.write(text)
