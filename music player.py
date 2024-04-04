@@ -7,7 +7,6 @@ import os,sys
 import random
 import pygame
 from configparser import ConfigParser
-import requests
 from PIL import Image,ImageTk
 from mutagen.id3 import APIC
 from mutagen import File
@@ -64,6 +63,7 @@ class MUSIC_PLAYER:
         self.is_gif_timer_cancled = True # because by default it is not intiated
         self.last_time_key_pressed = 0
         self.font_name = "MV Boli"
+        self.volume_limit_value = 70
 
         self.all_functions()
 
@@ -167,8 +167,8 @@ class MUSIC_PLAYER:
         self.settings_menu.add_cascade(label="Timer",menu=self.timer_menu)
         self.int_var2 = IntVar()
         self.volume_limit_menu = Menu(self.settings_menu,tearoff=0,bg="SystemButtonface")
-        self.volume_limit_menu.add_radiobutton(label='OFF',value=0,variable=self.int_var2,command=self.change_volume_limit)
-        self.volume_limit_menu.add_radiobutton(label='ON',value=1,variable=self.int_var2,command=self.change_volume_limit)
+        self.volume_limit_menu.add_radiobutton(label='OFF',value=0,variable=self.int_var2,command=self.on_off_volume_limit)
+        self.volume_limit_menu.add_radiobutton(label='ON',value=1,variable=self.int_var2,command=self.on_off_volume_limit)
         self.int_var2.set(1)
         self.settings_menu.add_cascade(label='Volume Limit',menu=self.volume_limit_menu)
         self.settings_menu.add_separator()
@@ -184,6 +184,7 @@ class MUSIC_PLAYER:
         self.string_var2.set(value='MV Boli')
         self.settings_menu.add_separator()
         self.settings_menu.add_cascade(label="Change Font",menu=self.font_menu)
+        self.settings_menu.add_command(label="Change volume limit value",command=self.change_volume_limit_value)
 
 
         self.helpmenu = Menu(self.my_menu,tearoff=0,bg="SystemButtonface",font=(self.font_name,10))
@@ -224,6 +225,11 @@ class MUSIC_PLAYER:
                                                 width=20,height=25,
                                                 text_color='#c92069',bg_color="#000000")
         self.left_time.place(x=0,y=690)
+
+        self.timer_info_label = customtkinter.CTkLabel(self.main_frame,text=" "*50,font=("Times New Roman",20),
+                                                width=20,height=25,
+                                                text_color='#c92069',bg_color="#000000")
+        self.timer_info_label.place(x=560,y=690)
 
         self.right_time = customtkinter.CTkLabel(self.main_frame,text="00:00:00",font=("Times New Roman",20),
                                                 width=20,height=25,
@@ -294,8 +300,9 @@ class MUSIC_PLAYER:
 
         self.volume_s = customtkinter.CTkSlider(self.volume_frame,from_=0,to=100,number_of_steps=10,
                                                 progress_color='#3cc920',width=300,command=lambda value:self.update_volume_bar(self.volume_s.get()))
-        self.volume_s.place(x=0,y=0)
+        self.volume_s.place(x=0,y=10)
         self.volume_s.set(70)
+
 
 
     """********************************************* Menu bar functions *****************************************"""
@@ -350,7 +357,7 @@ class MUSIC_PLAYER:
                 with open(os.path.join(self.main_path,"user data.ini"),'w',encoding='utf-8') as fo: # make sue thst encoding = 'utf-8' for to add paths to catch file
                     self.config.write(fo) # writing to catch file
 
-            elif l!=[]:
+            elif l != []:
                 flag = 0
                 max_count = len(l)
                 for i in l:
@@ -791,7 +798,7 @@ class MUSIC_PLAYER:
         time_in_millsec = int(self.timer.get())*60000 # converts in to millisecs
         self.timer_after = self.root.after(time_in_millsec,self.close_application) # calls the function after timeinmillsec
         self.is_timed = True # setting is_times to true uses 
-
+       
         self.new_root.destroy() # destroyes the small window
 
     def cancleing_timer(self):
@@ -876,7 +883,7 @@ class MUSIC_PLAYER:
 
             self.cancleing_timer()
 
-    def change_volume_limit(self):
+    def on_off_volume_limit(self):
         
         if self.int_var2.get() == 0: 
             # Means OFF Mode if you want to off you need to give the password default password is 0000
@@ -910,17 +917,78 @@ class MUSIC_PLAYER:
         elif self.int_var2.get() == 1:
             # Means On Mode
             self.is_volume_limited = True
-            if self.volume_s.get()>=80:
-                # if the volume value greater than 80
-                pygame.mixer_music.set_volume(0.7)
-                self.volume_s.set(70)
+            if self.volume_s.get()>=self.volume_limit_value:
+                # if the volume value greater than limit value
+                pygame.mixer_music.set_volume(self.volume_limit_value/100)
+                self.volume_s.set(self.volume_limit_value)
                 self.volume_s.configure(progress_color = '#3cc920')
-                self.volume_frame.configure(text='Volume 70%')
+                self.volume_frame.configure(text=f'Volume {self.volume_limit_value}%')
                 
-                self.config.set(section="DATA",option='volume',value='70')
+                self.config.set(section="DATA",option='volume',value=str(self.volume_limit_value))
                 # changing the volume data in catch file
                 with open(os.path.join(self.main_path,'user data.ini'),'w',encoding='utf-8') as fo:
                     self.config.write(fo)
+    def change_volume_limit_value(self):
+
+        self.new_root3 = Toplevel(self.root)
+        # for focus on the new small window     
+        # # if you not use this function we can't destroy the small window when it goes to background
+        self.new_root3.focus_force()
+
+        self.new_root3.geometry("300x100+450+600")
+        self.new_root3.resizable(width=False,height=False) # setting the small window to not resizeable
+
+        
+        self.lf = LabelFrame(self.new_root3,text="Volume Limit 60%",width=300,height=300,font=(self.font_name,15),
+                        fg="#A31214")
+        self.lf.place(x=10,y=0)
+        sl = customtkinter.CTkSlider(self.lf,from_=40,to=80,number_of_steps=4,width=280,height=20,
+                                     command=self.volume_limit_update_slider)
+        sl.pack()
+        sl.set(60)
+        customtkinter.CTkButton(self.new_root3,width=300,height=15,fg_color=self.fg,
+                                text_color="#50C763",hover_color="#94D1D1",
+                                text="Set Limit Value",font=(self.font_name,25),
+                                command=lambda :self.set_new_volume_limit(sl.get())).place(x=0,y=60)
+        
+        self.new_root3.bind("<FocusOut>",lambda x: self.new_root3.destroy())
+
+        self.new_root3.attributes('-alpha',0.5)
+        self.new_root3.overrideredirect(True) # making the small window to does not having buttons like(close,minimize,maximize)
+        self.new_root3.mainloop()
+
+    def volume_limit_update_slider(self,value):
+        self.lf.configure(text=f"Volume Limit {int(value)}%")
+    def set_new_volume_limit(self,value):
+        # 'icacls file(or)folder /remove adminname' # for removing permisions
+        command = f'icacls {self.main_path} /remove {self.admin_name}'
+        subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+
+        self.volume_limit_value = int(value)
+        original_value = int(self.config.get(section="DATA",option='volume'))
+        if original_value >= self.volume_limit_value:
+            # if volume is greater than limit value the progress bar color changes to red
+            self.volume_s.configure(progress_color = "#f7020f")
+            self.is_volume_limited = False
+            self.int_var2.set(0) # off mode
+        else:
+            # sets to default green color
+            self.volume_s.configure(progress_color = '#3cc920')
+            self.is_volume_limited = True
+            self.int_var2.set(1) # on mode
+
+        self.config.set(section="DATA",option='volume_limit_value',value=str(int(value)))
+        # changing the volume data in catch file
+        with open(os.path.join(self.main_path,'user data.ini'),'w',encoding='utf-8') as fo:
+            self.config.write(fo)
+        
+        self.new_root3.destroy()
+        
+        ## 'icacls file(or)folder /deny adminname:F' # for blocking permissions
+        command = f'icacls {self.main_path} /deny {self.admin_name}:F'
+        subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+
+
     
     def change_font(self):
         # 'icacls file(or)folder /remove adminname' # for removing permisions
@@ -942,23 +1010,6 @@ class MUSIC_PLAYER:
         self.background_menu.configure(font=(self.font_name,10))
         self.helpmenu.configure(font=(self.font_name,10))
 
-        try:
-            # we using try and except block because these are popup windows while selected on the particural 
-            # tasks only it pop up's
-            self.dowanload_menu.configure(font=(self.font_name,10))
-
-            self.volume_limit_password.configure(font=(self.font_name,25))
-            self.password.configure(font=(self.font_name,15))
-
-            self.text_lable.configure(font=(self.font_name,25))
-            self.info_lable.configure(font=(self.font_name,16))
-            self.save_b.configure(font=(self.font_name,25))
-            self.close_b.configure(font=(self.font_name,25))
-            
-        except:
-            pass
-        
-        
 
 
         self.config.set(section="DATA",option='font_name',value=self.font_name)
@@ -1135,6 +1186,25 @@ class MUSIC_PLAYER:
 
         self.my_menu.delete(82,82) # deletes the label of date time which add previous
         self.my_menu.add_cascade(label=f"{date}     {time}  IST",command=self.browser)
+
+        
+        try:
+            if self.is_timed:
+                # if the timer is in on mode
+                if int(datetime.now().strftime("%S"))%2 == 0:
+                    self.timer_info_label = customtkinter.CTkLabel(self.main_frame,text="** TIMER ON **",font=("Times New Roman",20),
+                                                            width=20,height=25,
+                                                            text_color='#FF0000')
+                    self.timer_info_label.place(x=560,y=690)
+                else:
+                    self.timer_info_label.configure(text=" "*28)
+                    del self.timer_info_label
+            else:
+                self.timer_info_label.configure(text=" "*28)
+                del self.timer_info_label
+        except:
+            pass
+
 
         self.root.after(1000,self.update_date_and_time)
 
@@ -1885,7 +1955,7 @@ class MUSIC_PLAYER:
             self.reapeating_info.configure(text="Repeating song") # diaplyes the repeating song in display
 
         else:
-            # cancleing the  repeating song
+            # canceling the  repeating song
             self.is_repeating = False
             self.repeating_song_name = None
             self.reapeating_info.configure(text="") # replacing the repeatinf song text to ""
@@ -1913,8 +1983,7 @@ class MUSIC_PLAYER:
 
         if self.current_song != None:
             # if only pygame is initilsed if current song != none means pygame is intilised
-
-            if self.is_volume_limited == False or (self.is_volume_limited == True and value<80):
+            if self.is_volume_limited == False or (self.is_volume_limited == True and value<=self.volume_limit_value):
                 # if the volume limited is true then we need to check the value of volume
                 if self.is_muted == False:
                     # if the app is not muted
@@ -1923,8 +1992,8 @@ class MUSIC_PLAYER:
 
                 self.volume_s.set(value) # for keyboard input only
 
-                if value >= 80:
-                    # if volume is greater than 80 the progress bar color changes to red
+                if value > self.volume_limit_value:
+                    # if volume is greater than limit value the progress bar color changes to red
                     self.volume_s.configure(progress_color = "#f7020f")
                 
                 else:
@@ -2026,6 +2095,7 @@ class MUSIC_PLAYER:
                     self.set_slider(last_pos)
                     self.pause_function()
                     volume_value = int(self.config.get(section='DATA',option='volume'))
+                    self.volume_s.set(volume_value)
                     pygame.mixer_music.set_volume(volume_value/100)
 
                     self.volume_frame.configure(text=f'Volume {int(volume_value)}%')
@@ -2041,14 +2111,17 @@ class MUSIC_PLAYER:
 
                     self.volume_frame.configure(text=f'Volume {int(volume_value)}%')
 
-                
-                if volume_value>=80:
-                    self.is_volume_limited == True
-                    # Automatically set the volume to 70% if it is >=80
-                    self.volume_s.set(70)
-                    self.volume_frame.configure(text='Volume 70%')
+                self.volume_limit_value = int(self.config.get(section="DATA",option="volume_limit_value"))
 
-                    self.config.set(section="DATA",option='volume',value='70')
+                if volume_value>self.volume_limit_value:
+                    self.is_volume_limited == True
+                    # if the volume is greater than limit volume preset the volume to limit value
+                    self.volume_s.set(self.volume_limit_value)
+                    self.volume_frame.configure(text=f'Volume {self.volume_limit_value}%')
+
+                    pygame.mixer_music.set_volume(self.volume_limit_value/100)
+
+                    self.config.set(section="DATA",option='volume',value=str(self.volume_limit_value))
                     # changing the volume data in catch file
                     with open(os.path.join(self.main_path,'user data.ini'),'w',encoding='utf-8') as fo:
                         self.config.write(fo)
@@ -2075,7 +2148,6 @@ class MUSIC_PLAYER:
                 elif "dynamic" in static_dynamic:
                     self.is_static = False
                     self.update_song_background()
-                
 
                 self.font_name = self.config.get(section="DATA",option="font_name")
                 self.string_var2.set(value=self.font_name)
@@ -2087,63 +2159,68 @@ class MUSIC_PLAYER:
 
             else:
                 # this is for first time application openes
-                icon_url = "https://cdn0.iconfinder.com/data/icons/internet-2020/1080/Applemusicandroid-512.png"
-                icon_data = requests.get(icon_url).content
 
-                gif_url =  "https://i.gifer.com/LBXB.gif"
-                gif_data = requests.get(gif_url).content
+                # icon_url = "https://cdn0.iconfinder.com/data/icons/internet-2020/1080/Applemusicandroid-512.png"
+                # icon_data = requests.get(icon_url).content
 
-                if requests.get(icon_url).status_code == 200 and requests.get(gif_url).status_code == 200:
+                # gif_url =  "https://i.gifer.com/LBXB.gif"
+                # gif_data = requests.get(gif_url).content
 
-                    # if the internet acess is avaiable the onlt the remaing work goes on
+                with open(file = self.recursive("logo image.png"),mode = 'rb') as fo:
+                    icon_data = fo.read()
+                with open(file = self.recursive("gif image.gif"),mode = 'rb') as fo:
+                    gif_data = fo.read()
+                with open(file = self.recursive("help file.txt"),mode='r') as fo:
+                    text_data = fo.read()
 
-                    os.makedirs(self.main_path)
-                    os.makedirs(os.path.join(self.main_path,'icons and photos'))
 
-                    icons_path = os.path.join(self.main_path,'icons and photos')
+                os.makedirs(self.main_path)
+                os.makedirs(os.path.join(self.main_path,'icons and photos'))
 
-                    with open (os.path.join(icons_path,"image.png"),'wb') as fo:
-                        fo.write(icon_data)
-                    Image.open(os.path.join(icons_path,"image.png")).save(os.path.join(icons_path,"icon.ico"),format='ICO')
+                icons_path = os.path.join(self.main_path,'icons and photos')
 
-                    with open(os.path.join(icons_path,"gif image.gif"),"wb") as fo:
-                        fo.write(gif_data)
-                    
-                    info = Image.open(os.path.join(icons_path,"gif image.gif"))
-                    no = info.n_frames
-                    self.gif_images_list = []
-                    for i in range(0,no):
-                        if i not in [8,16,17,18,19,23,24,25,26,45,46,47]: # these are the not perfect images indexs removing those and adding remaing
-                            self.gif_images_list.append(PhotoImage(file=os.path.join(icons_path,"gif image.gif"),format=f'gif -index {i}'))
+                with open (os.path.join(icons_path,"image.png"),'wb') as fo:
+                    fo.write(icon_data)
+                Image.open(os.path.join(icons_path,"image.png")).save(os.path.join(icons_path,"icon.ico"),format='ICO')
 
-                    self.config ["DATA"] = {"songs_path":[],"current_song":"","background":"static","static_color":"#000000",
-                                            "background_listner":False,"volume":70,"last_pos":0,"font_name":"MV Boli"}
-                    
-                    with open(os.path.join(self.main_path,"user data.ini"),'w') as fo:
-                        self.config.write(fo)
-                        
-                    self.root.iconbitmap(os.path.join(icons_path,"icon.ico"))
-
-                    audio = self.recursive("Ye Mera Jahan.mp3") # default song
-                    self.songs_list.append(audio)
-                    shutil.copy2(src=audio,dst=self.main_path)
-                    self.current_song = None
-                    self.update_info_related_to_song()  
-
-                    self.config.set(section="DATA",option="songs_path",value=self.main_path+",") # setting to the catch file
-                    with open(os.path.join(self.main_path,"user data.ini"),'w',encoding='utf-8') as fo: # make sue thst encoding = 'utf-8' for to add paths to catch file
-                        self.config.write(fo) # writing to catch file
-
-                    # set permisions to denied
-                    # icacls file(or)folder name /deny adminname:F # for blocking permissions
-                    command = f'icacls {self.main_path} /deny {self.admin_name}:F'
-                    subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
-
-                    self.__del__()
+                with open(os.path.join(icons_path,"gif image.gif"),"wb") as fo:
+                    fo.write(gif_data)
                 
-                else:
-                    raise requests.ConnectionError.add_note(self,"Please Connect To Internet")
-            
+                info = Image.open(os.path.join(icons_path,"gif image.gif"))
+                no = info.n_frames
+                self.gif_images_list = []
+                for i in range(0,no):
+                    if i not in [8,16,17,18,19,23,24,25,26,45,46,47]: # these are the not perfect images indexs removing those and adding remaing
+                        self.gif_images_list.append(PhotoImage(file=os.path.join(icons_path,"gif image.gif"),format=f'gif -index {i}'))
+
+                with open(os.path.join(self.main_path,"help file.txt"),'w') as fo:
+                    fo.write(text_data)
+
+                self.config ["DATA"] = {"songs_path":[],"current_song":"","background":"static","static_color":"#000000",
+                                        "background_listner":False,"volume":70,"last_pos":0,"font_name":"MV Boli",
+                                        "volume_limit_value":70}
+                
+                with open(os.path.join(self.main_path,"user data.ini"),'w') as fo:
+                    self.config.write(fo)
+                    
+                self.root.iconbitmap(os.path.join(icons_path,"icon.ico"))
+
+                audio = self.recursive("Ye Mera Jahan.mp3") # default song
+                shutil.copy2(src=audio,dst=self.main_path)
+                self.songs_list.append(os.path.join(self.main_path,r"Ye Mera Jahan.mp3"))
+                self.current_song = None
+                self.update_info_related_to_song()  
+
+                self.config.set(section="DATA",option="songs_path",value=self.main_path+",") # setting to the catch file
+                with open(os.path.join(self.main_path,"user data.ini"),'w',encoding='utf-8') as fo: # make sue thst encoding = 'utf-8' for to add paths to catch file
+                    self.config.write(fo) # writing to catch file
+
+                # set permisions to denied
+                # icacls file(or)folder name /deny adminname:F # for blocking permissions
+                command = f'icacls {self.main_path} /deny {self.admin_name}:F'
+                subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+
+                self.__del__()
 
             if self.background_listen == True:
                 self.t1 = threading.Thread(target=self.background_listener)
@@ -2163,134 +2240,9 @@ class MUSIC_PLAYER:
             pass
                 
     def helper(self):
+        with open(os.path.join(self.main_path,"help file.txt"),'r') as fo:
+            text = fo.read()
 
-        text =  """
-            *** FILE ***
-                Add song folder:
-                
-                This will add songs(.mp3) files to list 
-                * You only add folder only to this application *
-                * You will not add songs individually *
-
-                Remove song Folder:
-
-                This will delete the song folder and songs belongs to that folder from the list.
-                Note: If the only one folder contians in the list the folder doesn't delete and raises an error message.
-
-            *** short cuts ***
-                
-                ### all short cuts will work only when the list having a song  in it 
-                ### and the application is running in main frame not in background
-                ### if you want to access the short cuts we can go to Background>>Background listener>>on
-
-                (ctrl+o)            -   opens the file dialog window to select the songs folder to add.
-                (ctrl+d)            -   opens the file dialog window to select the song folder to delete.
-                (space bar)		    -	stops playing  the song if playing else start playing the song if song is loaded 
-                (right arrow)		-	increase the volume of the application
-                (left arrow)		- 	decrease the volume of the application
-                (up arrow)		    -	go to previous song if the song is available
-                (down arrow)		- 	go to next song if the song is available
-                (s)                 -   shuffle the song's list
-                (r)                 -   repeat/unrepeat current song
-                (m)                 -   mute/unmute the application
-                (ctrl+left)         -   backward the song for 10 sec
-                (ctrl+right)        -   forward the song for 10 sec
-
-            *** Background ***
-                
-                static 			    -	keeps the background of the song as static mode (By default)
-                dynamic			    -	keeps the background of the song to dynamic mode  for every 5 sec the color of background changes
-                change static color	-	to change the static color of background
-                background listener	-	if you turn on background listener on .The application will be access  from the background also 
-                                        But it will makes issues when you perform any operation with keyboard (By default it is in off mode)
-                                        only spacebar,s,r,m buttons you can acess.
-
-            *** settings ***
-                    
-                reset all			- 	Resets the entire app including catch file  and closes the application
-                
-                set timer			- 	by default it is in off mode
-                                    off -> default
-                                    on  -> by selecting the range in slider .The app going to close after that time
-                                        you selected from now.
-
-                volume limit        -   by default it is in on mode to protect ears
-                                    on  -> default
-                                    off -> for turn off the volume limit you need to enter the password '0000'. 
-                                            After entering password only we can increase the volume >70%. 
-                                            Else you could not increse the volume >70%
-
-                Change cover image  -   Changes the cover image of the song that was playing currently.
-                                        If the song changes in b/w changing image the changes may not 
-                                        apply to song data.
-                
-                Delete cover image  -   Deletes the cover image of teh song that war playing currently.
-                                        If the song changes in b/w changing image the changes may not 
-                                        apply to song data.
-                change Font         -   For changing the text styles in the application.
-            *** Help ***
-                
-                Downaloads the users guidence text file
-                
-                
-                
-
-            *** Image ***
-                    
-                    By right click on image you get option to dowanload by clicking on it .The image downloads to your system.
-
-
-            *** songs list ***
-
-                    You can select the custom song by clicking on the songs list shown in window
-
-            *** song info ***
-
-                    Display the name of the song that was playing currently
-
-            ***	shuffle ***
-                
-                    shuffles the songs in the list and the current playing song goes to first of the list
-
-            *** previous button ***
-                
-                    By clicking on previous button the previous song gets played
-                    if the previous song is not available the button gets disabled
-
-            *** play/pause button ***
-
-                    By clicking on the play/pause button 
-                    if the song is play mode  the song is pause
-                    if the song is in pause mode the song is plays
-
-            *** next button ***
-
-                    By clicking on next button the next song gets played
-                    if the next song is not available the button gets disabled
-
-            *** repeat ***
-
-                    By clicking on repeat button the song repeats once agian
-                    And the "Repeating song" text  is displayed on the scrren
-
-                    if you click in on again the song does not repeat
-                    And  the "Repeating song" text gets disabled from scrren
-
-            *** volume ***
-
-                    you can adjust the app volume by the volume bar
-                    
-                    if the volume is greater than 80% the bar color gets red
-                    if the volume is less than 80% the bar color gets green
-                    
-                    " You can increase/decrease volume only by 10% at a time"
-            
-                    
-            **** Note: Do you want to delete the app first go to setting and select reset all
-                 then only catch files are deleted from you'r system and the delete.  ******
-
-
-            """
         output_folder = os.path.join(self.pre_admin_path,"Downloads")
         with open(os.path.join(output_folder,"Help file.txt"),'w') as fo:
             fo.write(text)
@@ -2300,7 +2252,7 @@ class MUSIC_PLAYER:
         notify = Notification(app_id="Music Player",title="Help File",msg="Downloaded to this PC",
                                 icon=os.path.join(icons_path,"icon.ico"))
         notify.add_actions(label="OPEN",launch=os.path.join(output_folder,"Help file.txt"))
-        notify.add_actions(label="Cancle",launch="")
+        notify.add_actions(label="Cancel",launch="")
         notify.set_audio(sound=audio.Mail,loop=False)
         notify.show()
     
