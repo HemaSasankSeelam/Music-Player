@@ -619,7 +619,15 @@ class MUSIC_PLAYER:
         elif e.keysym == "Left":
             # for volume down
             if self.current_song != None: # Base condition
-                if self.volume_s.get() > 0:
+                if self.volume_s.get()-10 > self.volume_limit_value and self.is_volume_limited == True:
+                    self.is_volume_limited = False
+                    self.update_volume_bar(self.volume_s.get()-10) 
+                    # if the volume limit is in on raise a error notification so we change the value and again set to default
+
+                    if self.int_var2.get() == 1:
+                        self.is_volume_limited = True # means the volume limit is in on mode
+                    
+                elif self.volume_s.get() > 0:
                     self.update_volume_bar(self.volume_s.get()-10) # volume decresed by 10% for every click
         elif e.keysym == "Up":
             # for changing song
@@ -969,13 +977,10 @@ class MUSIC_PLAYER:
         if original_value >= self.volume_limit_value:
             # if volume is greater than limit value the progress bar color changes to red
             self.volume_s.configure(progress_color = "#f7020f")
-            self.is_volume_limited = False
-            self.int_var2.set(0) # off mode
+
         else:
             # sets to default green color
             self.volume_s.configure(progress_color = '#3cc920')
-            self.is_volume_limited = True
-            self.int_var2.set(1) # on mode
 
         self.config.set(section="DATA",option='volume_limit_value',value=str(int(value)))
         # changing the volume data in catch file
