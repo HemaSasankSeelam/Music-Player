@@ -12,6 +12,7 @@ from mutagen.id3 import APIC
 from mutagen import File
 from mutagen.mp3 import MP3
 import eyed3
+from eyed3 import id3
 from tkinter import colorchooser
 import shutil
 from datetime import datetime
@@ -21,6 +22,7 @@ from winotify import Notification,audio
 import winsound
 import webbrowser
 from builtins import open
+from pathlib import Path
 
 class MUSIC_PLAYER:
 
@@ -271,6 +273,7 @@ class MUSIC_PLAYER:
         self.song_info_b = customtkinter.CTkButton(self.controls_frame,width=400,height=65,text="",font=(self.font_name,20),
                                                 text_color="#34b7eb",fg_color='transparent',anchor='w',bg_color=self.bg)
         self.song_info_b.place(x=0,y=0)
+        self.song_info_b.bind("<Button-1>",self.full_info)
 
         self.shuffle_b = customtkinter.CTkButton(self.controls_frame,width=0,height=0,text="\U0001F500",font=("TimeNewRoman",51),
                                                 text_color='#f5f107',anchor='n',fg_color='transparent',command=self.shuffle_songs_list)
@@ -1015,7 +1018,7 @@ class MUSIC_PLAYER:
         self.background_menu.configure(font=(self.font_name,10))
         self.helpmenu.configure(font=(self.font_name,10))
 
-
+        self.destroy_list_box() # destroys list and create it again
 
         self.config.set(section="DATA",option='font_name',value=self.font_name)
         # changing the volume data in catch file
@@ -1699,6 +1702,92 @@ class MUSIC_PLAYER:
             # if the lenght of the song is greater than 40 charters after 40 charters it add .... to it 
             text = text[0:40] + "..."
             self.song_info_b.configure(text=text)# prints the text in sonf_info_b
+            
+        self.song_info_b.bind("<Button-1>",self.full_info)
+    
+    def full_info(self,e:Event=None):
+        self.new_root4 = Toplevel(master=self.root,background="#91EDC0")
+        self.new_root4.title(string="Song Information")
+        self.new_root4.geometry(newGeometry="340x520+0+80")
+        self.new_root4.resizable(width=False,height=False)
+        self.new_root4.iconbitmap(bitmap=Path(self.main_path)/Path("icons and photos")/Path("icon.ico"))
+
+        def on_enter(value):
+            x:id3.tag.Tag = eyed3.load(self.current_song).tag
+            match value:
+                case "a":
+                    value = x.artist
+                case "b":
+                    value = x.album
+                case "c":
+                    value = x.genre
+                case "d":
+                    value = x.publisher
+                case "e":
+                    value = x.composer
+                case "f":
+                    value = x.recording_date
+                case "g":
+                    value = f"{eyed3.load(self.current_song).info.size_bytes / (1024 * 1024):.2f} Mb"
+                case "h":
+                    if Path(self.current_song).parent != Path(self.main_path):
+                        value = Path(self.current_song).parent
+                    else:
+                        value = Path(self.current_song).name
+                case "i":
+                    value = x.album_artist
+
+            text_label.configure(text = f"{value}")
+        def copy_text():
+            self.new_root4.clipboard_clear()
+            self.new_root4.clipboard_append(text_label.cget("text"))
+        
+        a = customtkinter.CTkButton(master=self.new_root4,width=60,height=25,text="Artist ",font=(self.font_name,25)
+                               ,text_color="#000000",corner_radius=500,fg_color="#F2C450")
+        b = customtkinter.CTkButton(master=self.new_root4,width=60,height=25,text="Album ",font=(self.font_name,25)
+                               ,text_color="#000000",corner_radius=500,fg_color="#F2C450")
+        c = customtkinter.CTkButton(master=self.new_root4,width=60,height=25,text="Genre ",font=(self.font_name,25)
+                               ,text_color="#000000",corner_radius=500,fg_color="#F2C450")
+        d = customtkinter.CTkButton(master=self.new_root4,width=60,height=25,text="Publisher ",font=(self.font_name,25)
+                               ,text_color="#000000",corner_radius=500,fg_color="#F2C450")
+        e = customtkinter.CTkButton(master=self.new_root4,width=60,height=25,text="Composer ",font=(self.font_name,25)
+                               ,text_color="#000000",corner_radius=500,fg_color="#F2C450")
+        f = customtkinter.CTkButton(master=self.new_root4,width=60,height=25,text="Year ",font=(self.font_name,25)
+                               ,text_color="#000000",corner_radius=500,fg_color="#F2C450")
+        g = customtkinter.CTkButton(master=self.new_root4,width=60,height=25,text="Size ",font=(self.font_name,25)
+                               ,text_color="#000000",corner_radius=500,fg_color="#F2C450")
+        h = customtkinter.CTkButton(master=self.new_root4,width=60,height=25,text="Path ",font=(self.font_name,25)
+                               ,text_color="#000000",corner_radius=500,fg_color="#F2C450")
+        i = customtkinter.CTkButton(master=self.new_root4,width=60,height=25,text="Album Artist ",font=(self.font_name,25)
+                               ,text_color="#000000",corner_radius=500,fg_color="#F2C450")
+
+        
+        text_label = customtkinter.CTkLabel(master=self.new_root4,
+                                            width=340,height=25,fg_color="#FFFFFF",corner_radius=50,
+                                            text_color="#000000",text="")
+        text_label.place(x=0,y=475)
+        
+        co = customtkinter.CTkButton(master=self.new_root4,width=340,height=2,fg_color="#FFFFFF",
+                                     corner_radius=50,text="Copy Text",text_color="#000000",
+                                     command=copy_text)
+        co.place(x=0,y=500)
+
+        a.place(x=10,y=5),b.place(x=120,y=5),c.place(x=230,y=5),d.place(x=10,y=60),e.place(x=170,y=60)
+        f.place(x=10,y=115),g.place(x=120,y=115),h.place(x=230,y=115),i.place(x=10,y=165)
+        
+        a.bind("<Enter>",command=lambda x:on_enter("a"))
+        b.bind("<Enter>",command=lambda x:on_enter("b"))
+        c.bind("<Enter>",command=lambda x:on_enter("c"))
+        d.bind("<Enter>",command=lambda x:on_enter("d"))
+        e.bind("<Enter>",command=lambda x:on_enter("e"))
+        f.bind("<Enter>",command=lambda x:on_enter("f"))
+        g.bind("<Enter>",command=lambda x:on_enter("g"))
+        h.bind("<Enter>",command=lambda x:on_enter("h"))
+        i.bind("<Enter>",command=lambda x:on_enter("i"))
+
+        self.new_root4.focus_force() # focusing the new root 4 by default it is not focus 
+        self.new_root4.bind("<FocusOut>",lambda x: self.new_root4.destroy()) # if focus out we destroy it 
+        self.new_root4.mainloop()
     
 
     def shuffle_songs_list(self):
