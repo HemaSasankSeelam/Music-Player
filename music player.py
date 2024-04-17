@@ -80,9 +80,9 @@ class MUSIC_PLAYER:
 
             time_text = str(self.left_time.cget('text'))
             h,m,s = map(int,time_text.split(":"))
-            totol_mill_secs = str(h*36_00_000 + m*60_000 + s*1_000) # it takes only str
+            totol_mill_secs = h*36_00_000 + m*60_000 + s*1_000 
 
-            self.config.set(section="DATA",option='last_pos',value=totol_mill_secs)
+            self.config.set(section="DATA",option='last_pos',value=str(totol_mill_secs)) # it takes only strings
             # changing the last pos value in catch file
 
             with open(os.path.join(self.main_path,'user data.ini'),'w',encoding='utf-8') as fo:
@@ -247,7 +247,7 @@ class MUSIC_PLAYER:
         self.list_box_scroll_bar.pack(side=RIGHT,fill=Y)
 
         self.list_box = Listbox(self.list_box_frame,width=330,font=(self.font_name,15),yscrollcommand=self.list_box_scroll_bar.set,
-                                activestyle='none',selectbackground='#808080',selectforeground='#07f592')
+                                activestyle='none',selectbackground='#808080',selectforeground='#07f592',cursor='hand2')
         self.list_box.pack(side=LEFT,fill=Y)
 
         self.list_box.bind("<Tab>",self.destroy_list_box)
@@ -271,7 +271,7 @@ class MUSIC_PLAYER:
 
         ## len max==40
         self.song_info_b = customtkinter.CTkButton(self.controls_frame,width=400,height=65,text="",font=(self.font_name,20),
-                                                text_color="#34b7eb",fg_color='transparent',anchor='w',bg_color=self.bg)
+                                                text_color="#34b7eb",fg_color='transparent',anchor='w',bg_color=self.bg,cursor="hand2")
         self.song_info_b.place(x=0,y=0)
         self.song_info_b.bind("<Button-1>",self.full_info)
 
@@ -280,7 +280,8 @@ class MUSIC_PLAYER:
         self.shuffle_b.place(x=550,y=0)
 
         self.previous_b = customtkinter.CTkButton(self.controls_frame,width=0,height=0,text="\u23EE",font=("TimeNewRoman",51),
-                                               text_color='#f5f107',anchor='n',fg_color='transparent',command=self.go_to_previous_track,state=DISABLED)
+                                               text_color='#f5f107',anchor='n',fg_color='transparent',command=self.go_to_previous_track,
+                                               )
         self.previous_b.place(x=620,y=0)
 
         self.play_b = customtkinter.CTkButton(self.controls_frame,width=0,height=0,text="\u25B6",font=("TimeNewRoman",51),
@@ -327,7 +328,7 @@ class MUSIC_PLAYER:
                                 audio = MP3(os.path.join(root,filename)) #opening the file path
                                 if audio: # if True means any data in audio only it satisfies the if condition
                                     # Check if the audio has a valid duration
-                                    self.songs_list.append(os.path.join(root,filename)) 
+                                    self.songs_list.append(os.path.normpath(os.path.join(root,filename)))
                                     song_flag = True # changing flag to True for adding song folder to catch files
                                     self.double_check(song_flag=song_flag,root=root)
                             except:
@@ -345,7 +346,9 @@ class MUSIC_PLAYER:
                     # if flag == max len of songs list the only the song adds into list
                     flag+=1
             if flag == max_count:
-                self.songs_list.append(i) # addes to song_list 
+                self.songs_list.append(os.path.normpath(i)) # addes to song_list 
+
+        self.songs_list = [Path(i).as_posix() for i in self.songs_list] # returna path as string in only forward slash
 
         if song_flag == True:
             # 'icacls file(or)folder /remove adminname' # for removing the permisions
@@ -391,7 +394,7 @@ class MUSIC_PLAYER:
             # if only the folder != None 
             for root,dirs,files in os.walk(folder):
                 for d in dirs:
-                    path_lists.append(os.path.join(root,d)) # appends all sub folders if have
+                    path_lists.append(os.path.normpath(os.path.join(root,d))) # appends all sub folders if have
 
             songs_path = self.config.get(section="DATA",option="songs_path").split(",")
             songs_path_list2 = songs_path[0:len(songs_path)-1] # retuns all folders list in catch file
@@ -416,18 +419,23 @@ class MUSIC_PLAYER:
                 # atleast one folder
                 songs_path_list2.remove(songs_path_list2[indexes[0]]) # removes folder from list
                 self.songs_list.clear() # delets all the list
-
+                
                 for i in songs_path_list2:
-                    if os.path.exists(i): # if only that path exixts in system
+
+                    if os.path.normpath(i) == os.path.normpath(self.main_path):
+                        self.songs_list.append(os.path.normpath(Path(self.main_path)/Path(r"Ye Mera Jahan.mp3")))
+
+                    elif os.path.exists(i): # if only that path exixts in system
                         for j in os.listdir(i):
                             if os.path.splitext(j)[-1].lower().strip() in (".mp3"):
                                 try:
                                     Audio = MP3(os.path.join(i,j))
                                     """ if the file is not able to play raises error"""
                                     if Audio:
-                                        self.songs_list.append(os.path.join(i,j))
+                                        self.songs_list.append(os.path.normpath(os.path.join(i,j)))
                                 except:
                                     pass
+                self.songs_list = [Path(i).as_posix() for i in self.songs_list]
 
                 current_song = self.config.get(section="DATA",option="current_song")# retuns current song from catch file
                 current_song_folder = os.path.split(current_song)[0] # returns current song folder from current song 
@@ -437,10 +445,14 @@ class MUSIC_PLAYER:
                     pygame.mixer_music.unload() # unloads the current song
                     self.current_song = None # setting the current song to None
 
+                    self.left_time.configure(text="00:00:00") # change the text to default text
+                    self.song_s.set(0) # setting slider position 0
+                    self.reapeating_info.configure(text="") # setting the repeating song text to ""
+
                     self.update_info_related_to_song()
 
                     # setting current song data in catch file in above func the current song get selected
-                    self.config.set(section="DATA",option="current_song",value=self.current_song)
+                    self.config.set(section="DATA",option="current_song",value=str(self.current_song))
                     with open(os.path.join(self.main_path,"user data.ini"),'w',encoding='utf-8') as fo:
                         self.config.write(fo)
 
@@ -498,6 +510,7 @@ class MUSIC_PLAYER:
             self.update_song_background()
             self.update_song_image()
 
+
             if self.is_palying == False: # checkes if the song is playing or not
                 pygame.mixer_music.load(self.current_song) # loads the song into pygame
                 pygame.mixer_music.set_volume(0.7) # settign the volume of app to 70 % max==1 means 100%
@@ -509,7 +522,10 @@ class MUSIC_PLAYER:
                 except:
                     """some audio fomat get exceptions but woks because of that we using try and except block"""
                     pass
-        
+
+        self.songs_list = [Path(i).as_posix() for i in self.songs_list]
+        self.current_song = Path(self.current_song).as_posix() # return all slashes in forward only
+
         if self.songs_list.index(self.current_song) == len(self.songs_list)-1 and self.songs_list.index(self.current_song) == 0:
             # this conditon is for if only one song in the list
             # both buttons will disables
@@ -1020,7 +1036,7 @@ class MUSIC_PLAYER:
 
         self.destroy_list_box() # destroys list and create it again
 
-        self.config.set(section="DATA",option='font_name',value=self.font_name)
+        self.config.set(section="DATA",option='font_name',value=str(self.font_name))
         # changing the volume data in catch file
         with open(os.path.join(self.main_path,'user data.ini'),'w',encoding='utf-8') as fo:
             self.config.write(fo)
@@ -1492,7 +1508,7 @@ class MUSIC_PLAYER:
         """
         self.list_box.destroy()
         self.list_box = Listbox(self.list_box_frame,width=330,font=(self.font_name,15),yscrollcommand=self.list_box_scroll_bar.set,
-                                activestyle='none',selectbackground='#808080',selectforeground='#07f592')
+                                activestyle='none',selectbackground='#808080',selectforeground='#07f592',cursor='hand2')
         self.list_box.pack(side=LEFT,fill=Y)
 
         self.list_box.bind("<<ListboxSelect>>",self.custom_song)
@@ -1918,7 +1934,7 @@ class MUSIC_PLAYER:
         self.update_song_image() # update image of song
 
         # changing the current song data in catch file
-        self.config.set(section='DATA',option="current_song",value=self.current_song)
+        self.config.set(section='DATA',option="current_song",value=str(self.current_song))
         with open(os.path.join(self.main_path,"user data.ini"),'w',encoding='utf-8') as fo:
             self.config.write(fo)
         
@@ -2176,8 +2192,7 @@ class MUSIC_PLAYER:
                                     flag = 2
                             except:
                                 pass
-                            
-                current_song = self.config.get(section="DATA",option="current_song")
+                current_song = os.path.normpath(self.config.get(section="DATA",option="current_song"))
                 volume_value = int(self.config.get(section='DATA',option='volume'))
 
                 if os.path.exists(current_song): # if only song exists in system
