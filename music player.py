@@ -1278,7 +1278,7 @@ class MUSIC_PLAYER:
             self.song_image.configure(image=self.gif_images_list[self.index_count])
 
         self.is_gif_timer_cancled = False
-        self.gif_timer = self.root.after(100,self.animaee)
+        self.gif_timer = self.root.after(50,self.animaee)
 
         
     def update_song_image(self):
