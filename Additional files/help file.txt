@@ -1,0 +1,128 @@
+
+            *** FILE ***
+                Add song folder:
+                
+                This will add songs(.mp3) files to list 
+                * You only add folder only to this application *
+                * You will not add songs individually *
+
+                Remove song Folder:
+
+                This will delete the song folder and songs belongs to that folder from the list.
+                Note: If the only one folder contains in the list the folder doesn't delete and raises an error message.
+
+            *** short cuts ***
+                
+                ### all short cuts will work only when the list having a song  in it 
+                ### and the application is running in main frame not in background
+                ### if you want to access the short cuts we can go to Background>>Background listener>>on
+
+		(CTRL o)                                -       opens the file dialog window to select the songs folder to add.
+		(CTRL d)                                -       opens the file dialog window to select the song folder to delete.
+		(space bar)	                        -       stops playing  the song if playing else start playing the song if song is loaded
+		(right arrow)		                -	increase the volume of the application
+		(left arrow)				- 	decrease the volume of the application
+		(up arrow)		 		-	go to previous song if the song is available
+		(down arrow)		 		- 	go to next song if the song is available
+		(s)                 		 		-       shuffle the song's list
+		(r)                                            -       repeat/unrepeating current song
+		(m)                                           -      mute/unmute the application
+		(CTRL left)                              -      backward the song for 10 sec.
+		(CTRL right)                           -       forward the song for 10 sec.
+
+            *** Background ***
+                
+		static 			   		 -	 keeps the background of the song as static mode (By default)
+		dynamic	    				 -	keeps the background of the song to dynamic mode  for every 5   sec the colour of background 										changes
+		change static colour	         -	to change the static colour of background
+		background listener	         -	if you turn on background listener on .The application will be access  from the background also 										But it will makes issues when you perform any operation with keyboard (By default it is in off 										mode)
+                                      only spacebar,s,r,m buttons you can access.
+
+            *** settings ***
+                    
+		reset all	                   		 - 	Resets the entire app including catch file  and closes the    application
+                
+   		set timer		  			 - 	by default it is in off mode.
+                                    				off -> default
+                                    				on  -> by selecting the range in slider .The app going to close after that time
+                                                			    you selected from now.
+
+     		volume limit                   		-       by default it is in on mode to protect ears.
+                                    				on  -> default
+                                    				off -> for turn off the volume limit you need to enter the password '0000'. 
+                                               			 	After entering password only we can increase the volume >limit value%. 
+                                                			Else you could not increase the volume >limit value%
+
+      		Change cover image    		-       Changes the cover image of the song that was playing currently.
+                                                          		If the song changes in b/w changing image the changes may not 
+                                                          		apply to song data.
+                
+ 		Delete cover image                -        Deletes the cover image of teh song that war playing currently.
+                                        	             		If the song changes in b/w changing image the changes may not 
+                                                             		apply to song data.
+		change Font                          -        For changing the text styles in the application.
+		
+		change volume limit value   -  	You can change the limit value in between 40% to 80%.
+									if the current volume is greater than limit value the volume cannot increase but decreases
+									For increasing volume you need turn off the volume limit enter volume limit password '0000'
+
+            *** Help ***
+                
+                Download’s the user’s guidance text file
+                
+            *** Image ***
+                    
+                    By right click on image you get option to download by clicking on it .The image downloads to your system.
+
+            *** songs list ***
+
+                    You can select the custom song by clicking on the songs list shown in window.
+
+            *** song info ***
+
+                    Display the name of the song that was playing currently.
+		   If you left click on it another window will open for more details about song
+
+            ***shuffle ***
+                
+                    shuffles the songs in the list and the current playing song goes to first of the list.
+
+            *** previous button ***
+                
+                    By clicking on previous button, the previous song gets played
+                    if the previous song is not available the button gets disabled
+
+            *** play/pause button ***
+
+                    By clicking on the play/pause button 
+                    if the song is playing mode  the song is pause
+                    if the song is in pause mode the song is plays
+
+            *** next button ***
+
+                    By clicking on next button, the next song gets played.
+                    if the next song is not available the button gets disabled
+
+            *** repeat ***
+
+                    By clicking on repeat button, the song repeats once again
+                    And the "Repeating song" text  is displayed on the screen
+
+                    if you click in on again the song does not repeat
+                    And  the "Repeating song" text gets disabled from screen
+
+            *** volume ***
+
+                    you can adjust the app volume by the volume bar.
+                    
+                    if the volume is greater than limit value the bar colour gets red # by default limit value is 70
+                    if the volume is less than limit value the bar colour gets green
+                    
+                    " You can increase/decrease volume only by 10% at a time."
+            
+                    
+            **** Note: Do you want to delete the app first go to setting and select reset all
+                 then only catch files are deleted from your system and the delete.  ******
+
+
+            
