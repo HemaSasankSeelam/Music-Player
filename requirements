@@ -1,0 +1,7 @@
+pynput==1.7.6
+customtkinter==5.1.3
+pygame==2.1.2
+Pillow==9.4.0
+mutagen==1.46.0
+eyed3==0.9.6
+winotify==1.0.4
